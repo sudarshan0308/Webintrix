@@ -2,6 +2,8 @@
 Webnitrix is a high-fidelity, interactive 3D recreation of the Omnitrix interface, built using Three.js and Galvanic technology. This project features a fully functional Master Control system, holographic alien displays, and immersive sound effects designed for both Desktop and Mobile environments.
 
 
+🚀 LIVE DEMO: Access the Omnitrix Here
+
 🛠️ System Features
 Master Control Interface: Toggle between 10 unique alien DNA samples.
 
