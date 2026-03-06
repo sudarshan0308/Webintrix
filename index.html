@@ -206,16 +206,23 @@ const alienStats = [
             }
         });
 
-        window.addEventListener('wheel', () => {
-            if (active && !transformed) {
-                playSoftBloop();
-                index = (index + 1) % alienStats.length;
-                hologram.material.map = texLoader.load(alienStats[index].t);
-                document.getElementById('alien-label').innerText = alienStats[index].n;
-                updateTacticalHUD(index);
-                if(dial) dial.rotation.y += 0.4;
-            }
-        });
+        window.addEventListener('wheel', (e) => {
+    if (active && !transformed) {
+        playSoftBloop();
+
+        if (e.deltaY > 0) {
+            index = (index + 1) % alienStats.length;
+            if(dial) dial.rotation.y += 0.4;
+        } else {
+            index = (index - 1 + alienStats.length) % alienStats.length;
+            if(dial) dial.rotation.y -= 0.4;
+        }
+        
+        hologram.material.map = texLoader.load(alienStats[index].t);
+        document.getElementById('alien-label').innerText = alienStats[index].n;
+        updateTacticalHUD(index);
+    }
+});
 
         function startTimer() {
             let time = 10;
