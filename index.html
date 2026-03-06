@@ -8,14 +8,17 @@
         body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', monospace; color: #0f0; user-select: none; }
         #ui-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; transition: opacity 1s; }
         
-        /* Left Side Stats */
-        .stats { position: absolute; top: 20px; left: 20px; text-shadow: 0 0 10px #0f0; }
+        /* Layout Container to prevent overlap */
+        .top-nav { 
+            position: absolute; top: 20px; left: 0; width: 100%; 
+            display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; 
+        }
+
+        .stats { text-shadow: 0 0 10px #0f0; pointer-events: none; }
         
-        /* Right Side Panel: Architect & Tactical HUD */
         #right-panel { 
-            position: absolute; top: 20px; right: 20px; text-align: right; 
-            border-right: 3px solid #0f0; padding-right: 15px; text-shadow: 0 0 8px #0f0;
-            width: auto; min-width: 250px;
+            text-align: right; border-right: 3px solid #0f0; padding-right: 15px; 
+            text-shadow: 0 0 8px #0f0; width: auto; min-width: 250px; pointer-events: none;
         }
         #right-panel h2 { margin: 5px 0; font-size: 1.1rem; white-space: nowrap; }
 
@@ -31,15 +34,13 @@
         
         #flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; opacity: 0; z-index: 100; pointer-events: none; }
 
-        /* --- MOBILE RESPONSIVE FIXES --- */
-        @media (max-width: 600px) {
-            #alien-label { font-size: 2.2rem; bottom: 140px; }
-            #right-panel { min-width: 180px; font-size: 0.75rem; top: 10px; right: 10px; }
-            #right-panel h2 { font-size: 0.9rem; }
-            .stats h2 { font-size: 1.1rem; }
-            #prompt { font-size: 0.8rem; bottom: 22%; letter-spacing: 2px; }
-            .stat-bar-container { width: 130px; }
-            #timer-label { font-size: 1rem; bottom: 40px; }
+        /* --- MOBILE OVERLAP REPAIR --- */
+        @media (max-width: 700px) {
+            .top-nav { flex-direction: column; align-items: flex-start; gap: 15px; top: 10px; }
+            #right-panel { text-align: left; border-right: none; border-left: 3px solid #0f0; padding-right: 0; padding-left: 15px; min-width: 150px; }
+            #alien-label { font-size: 2.2rem; bottom: 160px; }
+            #prompt { font-size: 0.8rem; bottom: 25%; }
+            .stat-bar-container { width: 130px; margin: 5px 0 10px 0; }
         }
 
         @keyframes breathe { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.8; } }
@@ -50,27 +51,29 @@
 <body>
     <div id="flash"></div>
     <div id="ui-container">
-        <div class="stats">
-            <h2 id="status-display">SYSTEM: STANDBY</h2>
-            <p id="mode-display">MODE: IDLE</p>
-        </div>
-
-        <div id="right-panel">
-            <div id="architect-view">
-                <p>PROJECT: WEBNITRIX</p>
-                <h2>ARCHITECT: SUDARSHANA MURTHY</h2>
-                <p>OS VER: 3.0.4.GOLDEN</p>
-                <p>GALVANIC ENGINE</p>
+        <div class="top-nav">
+            <div class="stats">
+                <h2 id="status-display">SYSTEM: STANDBY</h2>
+                <p id="mode-display">MODE: IDLE</p>
             </div>
-            <div id="tactical-view" style="display: none;">
-                <p style="border-bottom: 1px solid #0f0; padding-bottom: 5px;">TACTICAL ANALYSIS</p>
-                <div class="label">POWER LEVEL</div>
-                <div class="stat-bar-container"><div id="bar-power" class="stat-fill"></div></div>
-                <div class="label">FIGHT CAPACITY</div>
-                <div class="stat-bar-container"><div id="bar-fight" class="stat-fill"></div></div>
-                <div class="label">SPEED/AGILITY</div>
-                <div class="stat-bar-container"><div id="bar-speed" class="stat-fill"></div></div>
-                <p id="alien-class" style="font-size: 0.65rem; margin-top: 10px;"></p>
+
+            <div id="right-panel">
+                <div id="architect-view">
+                    <p>PROJECT: WEBNITRIX</p>
+                    <h2>ARCHITECT: SUDARSHANA MURTHY</h2>
+                    <p>OS VER: 3.0.4.GOLDEN</p>
+                    <p>GALVANIC ENGINE</p>
+                </div>
+                <div id="tactical-view" style="display: none;">
+                    <p style="border-bottom: 1px solid #0f0; padding-bottom: 5px;">TACTICAL ANALYSIS</p>
+                    <div class="label">POWER LEVEL</div>
+                    <div class="stat-bar-container"><div id="bar-power" class="stat-fill"></div></div>
+                    <div class="label">FIGHT CAPACITY</div>
+                    <div class="stat-bar-container"><div id="bar-fight" class="stat-fill"></div></div>
+                    <div class="label">SPEED/AGILITY</div>
+                    <div class="stat-bar-container"><div id="bar-speed" class="stat-fill"></div></div>
+                    <p id="alien-class" style="font-size: 0.65rem; margin-top: 10px;"></p>
+                </div>
             </div>
         </div>
 
@@ -87,11 +90,10 @@
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-        let active = false, transformed = false, index = 0;
+        let active = false, transformed = false, index = 0, scrollLock = false;
         let hologram, dial, openSnd, transSnd, beepSnd;
         let touchStartY = 0;
 
-        // Scene Setup
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -180,6 +182,9 @@
         }
 
         function changeAlien(dir) {
+            if (scrollLock) return;
+            scrollLock = true;
+            
             playSoftBloop();
             if (dir === 'next') index = (index + 1) % alienStats.length;
             else index = (index - 1 + alienStats.length) % alienStats.length;
@@ -188,9 +193,10 @@
             document.getElementById('alien-label').innerText = alienStats[index].n;
             updateTacticalHUD(index);
             if(dial) dial.rotation.y += (dir === 'next' ? 0.4 : -0.4);
+
+            setTimeout(() => { scrollLock = false; }, 300); // Prevents skipping aliens
         }
 
-        // INPUT: CLICK/TAP
         window.addEventListener('mousedown', () => {
             if (transformed) return;
             if (!active) {
@@ -199,7 +205,7 @@
                 updateUI(0x00ff00, "ACTIVE", "SELECTION");
                 document.getElementById('architect-view').style.display = 'none';
                 document.getElementById('tactical-view').style.display = 'block';
-                updateTacticalHUD(0);
+                updateTacticalHUD(index);
                 document.getElementById('alien-label').style.opacity = 1;
                 document.getElementById('prompt').style.display = "none";
                 hologram.material.opacity = 0.8;
@@ -211,12 +217,10 @@
             }
         });
 
-        // INPUT: LAPTOP WHEEL
         window.addEventListener('wheel', (e) => {
             if (active && !transformed) changeAlien(e.deltaY > 0 ? 'next' : 'prev');
         });
 
-        // INPUT: MOBILE SWIPE
         window.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; }, { passive: true });
         window.addEventListener('touchend', (e) => {
             if (active && !transformed) {
