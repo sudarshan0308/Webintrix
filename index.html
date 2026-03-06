@@ -91,33 +91,47 @@
         camera.lookAt(0, 0, 0);
     });
 
-    // --- NEW: THE DISCHARGE & TIMER SYSTEM ---
+    // --- HELPER: UPDATE COLORS & STATUS TEXT ---
+    function updateSystemUI(hexColor, statusText) {
+        const colorStr = "#" + hexColor.toString(16).padStart(6, '0');
+        document.getElementById('status-text').innerText = `SYSTEM: ${statusText}`;
+        document.getElementById('timer-display').style.color = colorStr;
+        document.getElementById('gui').style.color = colorStr;
+        document.getElementById('alien-name').style.color = colorStr;
+        hologram.material.color.setHex(hexColor);
+    }
+
+    // --- UPDATED: 3-PHASE POWER CYCLE ---
     function startPowerCycle() {
         let timeLeft = 10;
         isTransformed = true;
         
         const timerEl = document.getElementById('timer-display');
         const guiEl = document.getElementById('gui');
-        const alienEl = document.getElementById('alien-name');
-        
         timerEl.style.opacity = '1';
         
+        updateSystemUI(0x00ff00, "ACTIVE"); // Start Green
+
         const interval = setInterval(() => {
             timeLeft--;
             timerEl.innerText = `DNA STABILITY: ${timeLeft * 10}%`;
 
-            // DISCHARGE PHASE: Turn Red at 30%
+            // PHASE 2: YELLOW (50%)
+            if (timeLeft === 5) {
+                updateSystemUI(0xffff00, "LOW POWER");
+            }
+
+            // PHASE 3: RED CRITICAL (30%)
             if (timeLeft === 3) {
-                const redHex = "#ff0000";
-                [timerEl, guiEl, alienEl].forEach(el => el.style.color = redHex);
-                hologram.material.color.setHex(0xff0000);
+                updateSystemUI(0xff0000, "CRITICAL");
                 guiEl.classList.add('flicker');
                 if (timerSound.buffer) timerSound.play();
             }
 
             if (timeLeft <= 0) {
                 clearInterval(interval);
-                location.reload(); // Shutdown/Reboot
+                updateSystemUI(0xff0000, "RECHARGING...");
+                setTimeout(() => location.reload(), 1500); // Small delay before reboot
             }
         }, 1000);
     }
@@ -128,20 +142,19 @@
         if (!isActive) {
             isActive = true;
             if (openSound.buffer) openSound.play();
+            updateSystemUI(0x00ff00, "SELECTION MODE");
             document.getElementById('gui').style.opacity = '1';
             document.getElementById('alien-name').style.opacity = '1';
             document.getElementById('start-prompt').style.display = 'none';
             hologram.material.opacity = 0.8;
         } else {
-            // FLASH LOGIC: Force immediate visibility then fade
             const flash = document.getElementById('flash');
             flash.style.opacity = '1';
-            
             if (transSound.buffer) transSound.play();
             
             setTimeout(() => {
                 flash.style.opacity = '0';
-                startPowerCycle(); // Begin the timer after the flash
+                startPowerCycle();
             }, 150);
         }
     });
